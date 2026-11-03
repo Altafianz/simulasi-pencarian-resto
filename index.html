@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Simulasi Resto Terdekat</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header class="kepala-halaman">
+      <h1>Simulasi Resto Terdekat untuk Banyak Konsumen</h1>
+    </header>
+
+    <main class="tata-letak">
+      <!-- ================= KOLOM KIRI: EDIT DATA + TOMBOL PLAY ================= -->
+      <aside class="kolom kolom-kiri">
+        <section class="kartu">
+          <h2 class="judul-kartu">Edit Data</h2>
+
+          <!-- id jangan diubah, dipakai script.js -->
+          <div class="baris-input">
+            <label for="k">Jumlah Konsumen:</label>
+            <input
+              type="number"
+              id="k"
+              min="1"
+              max="400"
+              value="20"
+              inputmode="numeric"
+            />
+          </div>
+
+          <div class="baris-input">
+            <label for="r">Jumlah Restoran:</label>
+            <input
+              type="number"
+              id="r"
+              min="1"
+              max="50"
+              value="4"
+              inputmode="numeric"
+            />
+          </div>
+
+          <div class="baris-input">
+            <label for="n">Ukuran Peta (pxp)</label>
+            <input
+              type="number"
+              id="n"
+              min="5"
+              max="20"
+              value="9"
+              inputmode="numeric"
+            />
+          </div>
+
+          <button id="save" class="tombol-save">Save</button>
+          <p class="petunjuk">
+            Isi angka lalu tekan Save. Nilai otomatis disesuaikan agar muat di
+            peta.
+          </p>
+        </section>
+
+        <section class="kartu kartu-algoritma">
+          <h3 class="label-algoritma">Algoritma awal (dijkstra)</h3>
+          <button
+            id="playAwal"
+            class="tombol-play"
+            type="button"
+            aria-label="Putar simulasi algoritma awal"
+          >
+            <span class="segitiga"></span>
+          </button>
+
+          <h3 class="label-algoritma">Setelah dioptimisasi</h3>
+          <button
+            id="playOpt"
+            class="tombol-play"
+            type="button"
+            aria-label="Putar simulasi setelah dioptimisasi"
+          >
+            <span class="segitiga"></span>
+          </button>
+        </section>
+      </aside>
+
+      <!-- ================= KOLOM TENGAH: PETA ================= -->
+      <section class="kolom kolom-tengah">
+        <div class="kartu kartu-peta">
+          <div class="kepala-peta">
+            <h2 class="judul-kartu">Peta</h2>
+            <button id="reset" class="tombol-reset" type="button">Reset</button>
+          </div>
+
+          <div class="bingkai-peta">
+            <!-- isinya digambar oleh script.js -->
+            <svg
+              id="peta"
+              viewBox="0 0 1000 1000"
+              preserveAspectRatio="xMidYMid meet"
+              role="img"
+              aria-label="Peta jalan dengan resto dan konsumen"
+            ></svg>
+          </div>
+
+          <div class="status-peta">
+            <span id="statusText">Peta siap. Tekan ▶ untuk memutar simulasi.</span>
+          </div>
+
+          <div class="progress" id="progressWrap" hidden>
+            <div id="progressBar"></div>
+          </div>
+        </div>
+
+        <div class="kartu ringkasan">
+          <p>
+            <span>Jumlah Restoran saat ini:</span>
+            <b id="ringkasResto">4</b>
+          </p>
+          <p>
+            <span>Jumlah Konsumen saat ini:</span>
+            <b id="ringkasKonsumen">20</b>
+          </p>
+        </div>
+
+        <details class="kartu daftar-hasil">
+          <summary>Hasil tiap konsumen</summary>
+          <pre id="daftar"></pre>
+        </details>
+      </section>
+
+      <!-- ================= KOLOM KANAN: BENCHMARK ================= -->
+      <aside class="kolom kolom-kanan">
+        <section class="kartu kartu-benchmark">
+          <h2 class="judul-kartu">benchmark</h2>
+
+          <article class="kotak-benchmark">
+            <h3>Algoritma awal (dijkstra)</h3>
+            <p>
+              <span>Waktu proses (ms):</span>
+              <b id="waktuAwal">–</b>
+            </p>
+            <p>
+              <span>Kompleksitas waktu:</span>
+              <b>O(K × (V log V + E))</b>
+            </p>
+            <p>
+              <span>Kompleksitas ruang:</span>
+              <b>O(V + E)</b>
+            </p>
+            <p>
+              <span>Node diproses:</span>
+              <b id="nodeAwal">–</b>
+            </p>
+            <p>
+              <span>Cek tetangga:</span>
+              <b id="cekAwal">–</b>
+            </p>
+            <p>
+              <span>Dijkstra dijalankan:</span>
+              <b id="runAwal">–</b>
+            </p>
+          </article>
+
+          <article class="kotak-benchmark">
+            <h3>Setelah dioptimisasi</h3>
+            <p>
+              <span>Waktu proses (ms):</span>
+              <b id="waktuOpt">–</b>
+            </p>
+            <p>
+              <span>Kompleksitas waktu:</span>
+              <b>O(V log V + E)</b>
+            </p>
+            <p>
+              <span>Kompleksitas ruang:</span>
+              <b>O(V + E)</b>
+            </p>
+            <p>
+              <span>Node diproses:</span>
+              <b id="nodeOpt">–</b>
+            </p>
+            <p>
+              <span>Cek tetangga:</span>
+              <b id="cekOpt">–</b>
+            </p>
+            <p>
+              <span>Dijkstra dijalankan:</span>
+              <b id="runOpt">–</b>
+            </p>
+          </article>
+
+          <p class="catatan-ruang">
+            * Ruang bantu di luar graf dan rute hasil. Keduanya memakai
+            <b>O(V + E)</b>; menyimpan rute tiap konsumen menambah
+            <b>O(K × V)</b> pada kedua algoritma.
+          </p>
+
+          <p class="banding" id="banding">
+            Tekan ▶ untuk melihat perbandingan waktu dan pengecekan.
+          </p>
+
+          <details class="benchmark-besar">
+            <summary>Benchmark graf besar (10.000 node)</summary>
+            <button id="bench" class="tombol-kecil" type="button">
+              Jalankan benchmark
+            </button>
+            <div id="out" class="keluaran-benchmark"></div>
+          </details>
+        </section>
+      </aside>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
