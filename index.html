@@ -7,210 +7,306 @@
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <header class="kepala-halaman">
-      <h1>Simulasi Resto Terdekat untuk Banyak Konsumen</h1>
-    </header>
-
-    <main class="tata-letak">
-      <!-- ================= KOLOM KIRI: EDIT DATA + TOMBOL PLAY ================= -->
-      <aside class="kolom kolom-kiri">
-        <section class="kartu">
-          <h2 class="judul-kartu">Edit Data</h2>
-
-          <!-- id jangan diubah, dipakai script.js -->
-          <div class="baris-input">
-            <label for="k">Jumlah Konsumen:</label>
-            <input
-              type="number"
-              id="k"
-              min="1"
-              max="400"
-              value="20"
-              inputmode="numeric"
-            />
+    <div class="app-shell">
+      <!-- ================= PANEL KIRI: EDIT DATA + JALANKAN ================= -->
+      <aside class="panel-kiri" aria-label="Panel kontrol simulasi">
+        <section class="blok-panel">
+          <div class="judul-panel">
+            <p class="eyebrow">Panel Kontrol</p>
+            <h2>Edit Data</h2>
           </div>
 
-          <div class="baris-input">
-            <label for="r">Jumlah Restoran:</label>
-            <input
-              type="number"
-              id="r"
-              min="1"
-              max="50"
-              value="4"
-              inputmode="numeric"
-            />
+          <!-- id jangan diubah, dipakai app.js -->
+          <div class="form-data">
+            <div class="baris-input">
+              <label for="k">Jumlah Konsumen</label>
+              <input
+                type="number"
+                id="k"
+                min="1"
+                max="400"
+                value="20"
+                inputmode="numeric"
+              />
+            </div>
+
+            <div class="baris-input">
+              <label for="r">Jumlah Restoran</label>
+              <input
+                type="number"
+                id="r"
+                min="1"
+                max="50"
+                value="4"
+                inputmode="numeric"
+              />
+            </div>
+
+            <div class="baris-input">
+              <label for="n">Ukuran Peta (pxp)</label>
+              <input
+                type="number"
+                id="n"
+                min="5"
+                max="20"
+                value="9"
+                inputmode="numeric"
+              />
+            </div>
           </div>
 
-          <div class="baris-input">
-            <label for="n">Ukuran Peta (pxp)</label>
-            <input
-              type="number"
-              id="n"
-              min="5"
-              max="20"
-              value="9"
-              inputmode="numeric"
-            />
-          </div>
-
-          <button id="save" class="tombol-save">Save</button>
+          <button id="save" class="tombol tombol-save" type="button">
+            Save
+          </button>
           <p class="petunjuk">
-            Isi angka lalu tekan Save. Nilai otomatis disesuaikan agar muat di
-            peta.
+            Angka otomatis disesuaikan agar tetap valid. Tekan Enter di input
+            untuk langsung menerapkan.
           </p>
         </section>
 
-        <section class="kartu kartu-algoritma">
-          <h3 class="label-algoritma">Algoritma awal (dijkstra)</h3>
-          <button
-            id="playAwal"
-            class="tombol-play"
-            type="button"
-            aria-label="Putar simulasi algoritma awal"
-          >
-            <span class="segitiga"></span>
-          </button>
+        <div class="pemisah-panel" aria-hidden="true"></div>
 
-          <h3 class="label-algoritma">Setelah dioptimisasi</h3>
-          <button
-            id="playOpt"
-            class="tombol-play"
-            type="button"
-            aria-label="Putar simulasi setelah dioptimisasi"
-          >
-            <span class="segitiga"></span>
-          </button>
+        <section class="blok-panel blok-jalankan">
+          <div class="judul-panel">
+            <p class="eyebrow">Animasi</p>
+            <h2>Jalankan</h2>
+          </div>
+
+          <div class="aksi-simulasi">
+            <div class="aksi-kepala">
+              <span class="aksi-nomor">01</span>
+              <div>
+                <h3>Algoritma awal</h3>
+                <p>Dijkstra per konsumen</p>
+              </div>
+            </div>
+            <button
+              id="playAwal"
+              class="tombol-play"
+              type="button"
+              aria-label="Putar simulasi algoritma awal"
+            >
+              <span class="segitiga" aria-hidden="true"></span>
+            </button>
+          </div>
+
+          <div class="aksi-simulasi">
+            <div class="aksi-kepala">
+              <span class="aksi-nomor aksi-nomor-opt">02</span>
+              <div>
+                <h3>Setelah dioptimisasi</h3>
+                <p>Dijkstra multi-source</p>
+              </div>
+            </div>
+            <button
+              id="playOpt"
+              class="tombol-play tombol-play-opt"
+              type="button"
+              aria-label="Putar simulasi setelah optimisasi"
+            >
+              <span class="segitiga" aria-hidden="true"></span>
+            </button>
+          </div>
         </section>
+
+        <div class="panel-bawah">
+          <section class="tips" aria-label="Cara pakai">
+            <p class="eyebrow">Cara Pakai</p>
+            <p class="tips-satu">Atur data → Save → putar.</p>
+          </section>
+
+          <section class="legenda" aria-label="Legenda peta">
+            <p class="eyebrow">Legenda</p>
+            <div class="legenda-grid">
+              <div class="legenda-item">
+                <span class="ikon-legenda ikon-pin" aria-hidden="true"></span>
+                <span>Resto</span>
+              </div>
+              <div class="legenda-item">
+                <span
+                  class="ikon-legenda ikon-konsumen"
+                  aria-hidden="true"
+                ></span>
+                <span>Konsumen</span>
+              </div>
+              <div class="legenda-item">
+                <span class="ikon-legenda ikon-rute" aria-hidden="true"></span>
+                <span>Rute terdekat</span>
+              </div>
+            </div>
+          </section>
+
+          <details class="daftar-hasil">
+            <summary>Hasil tiap konsumen</summary>
+            <pre id="daftar"></pre>
+          </details>
+        </div>
       </aside>
 
-      <!-- ================= KOLOM TENGAH: PETA ================= -->
-      <section class="kolom kolom-tengah">
-        <div class="kartu kartu-peta">
+      <!-- ================= AREA TENGAH: JUDUL + PETA ================= -->
+      <main class="area-peta" aria-label="Area peta simulasi">
+        <header class="kepala-utama">
+          <div>
+            <p class="eyebrow">Dijkstra · Pencarian Fasilitas Terdekat</p>
+            <h1>Simulasi Resto Terdekat</h1>
+            <p class="subjudul">
+              Bandingkan Dijkstra per konsumen dengan multi-source Dijkstra
+              pada peta kota yang sama.
+            </p>
+          </div>
+          <span class="pill-info">Multi-source</span>
+        </header>
+
+        <section class="kartu-peta" aria-label="Peta simulasi">
           <div class="kepala-peta">
-            <h2 class="judul-kartu">Peta</h2>
-            <button id="reset" class="tombol-reset" type="button">Reset</button>
+            <div>
+              <p class="eyebrow">Peta Kota</p>
+              <h2>Peta</h2>
+            </div>
+            <button id="reset" class="tombol tombol-reset" type="button">
+              Reset
+            </button>
           </div>
 
           <div class="bingkai-peta">
-            <!-- isinya digambar oleh script.js -->
             <svg
               id="peta"
-              viewBox="0 0 1000 1000"
+              viewBox="0 0 1200 900"
               preserveAspectRatio="xMidYMid meet"
               role="img"
-              aria-label="Peta jalan dengan resto dan konsumen"
+              aria-label="Peta kota dengan resto, konsumen, dan rute terdekat."
             ></svg>
           </div>
 
           <div class="status-peta">
+            <span class="status-dot" aria-hidden="true"></span>
             <span id="statusText">Peta siap. Tekan ▶ untuk memutar simulasi.</span>
           </div>
-
           <div class="progress" id="progressWrap" hidden>
             <div id="progressBar"></div>
           </div>
+        </section>
+
+        <div class="ringkasan">
+          <div class="chip-ringkasan">
+            <span class="ikon-ringkas ikon-resto" aria-hidden="true"></span>
+            <span>Restoran saat ini</span>
+            <b id="ringkasResto">–</b>
+          </div>
+          <div class="chip-ringkasan">
+            <span class="ikon-ringkas ikon-konsumen" aria-hidden="true"></span>
+            <span>Konsumen saat ini</span>
+            <b id="ringkasKonsumen">–</b>
+          </div>
+        </div>
+      </main>
+
+      <!-- ================= PANEL KANAN: BENCHMARK ================= -->
+      <aside class="panel-kanan" aria-label="Panel benchmark">
+        <div class="kepala-benchmark">
+          <p class="eyebrow">Analisis Performa</p>
+          <h2>Benchmark</h2>
         </div>
 
-        <div class="kartu ringkasan">
-          <p>
-            <span>Jumlah Restoran saat ini:</span>
-            <b id="ringkasResto">4</b>
-          </p>
-          <p>
-            <span>Jumlah Konsumen saat ini:</span>
-            <b id="ringkasKonsumen">20</b>
-          </p>
-        </div>
+        <article class="kotak-benchmark kotak-awal">
+          <div class="benchmark-kepala">
+            <div>
+              <h3>Algoritma awal</h3>
+              <p>Dijkstra per konsumen</p>
+            </div>
+            <span class="badge-bench">K×</span>
+          </div>
 
-        <details class="kartu daftar-hasil">
-          <summary>Hasil tiap konsumen</summary>
-          <pre id="daftar"></pre>
-        </details>
-      </section>
-
-      <!-- ================= KOLOM KANAN: BENCHMARK ================= -->
-      <aside class="kolom kolom-kanan">
-        <section class="kartu kartu-benchmark">
-          <h2 class="judul-kartu">benchmark</h2>
-
-          <article class="kotak-benchmark">
-            <h3>Algoritma awal (dijkstra)</h3>
-            <p>
-              <span>Waktu proses (ms):</span>
-              <b id="waktuAwal">–</b>
-            </p>
-            <p>
-              <span>Kompleksitas waktu:</span>
+          <div class="benchmark-isi">
+            <div class="benchmark-baris">
+              <span>Waktu proses</span>
+              <b><span id="waktuAwal">–</span> <span class="satuan">ms</span></b>
+            </div>
+            <div class="benchmark-baris baris-formula">
+              <span>Kompleksitas waktu</span>
               <b>O(K × (V log V + E))</b>
-            </p>
-            <p>
-              <span>Kompleksitas ruang:</span>
+            </div>
+            <div class="benchmark-baris baris-formula">
+              <span>Kompleksitas ruang</span>
               <b>O(V + E)</b>
-            </p>
-            <p>
-              <span>Node diproses:</span>
+            </div>
+            <div class="benchmark-baris">
+              <span>Node diproses</span>
               <b id="nodeAwal">–</b>
-            </p>
-            <p>
-              <span>Cek tetangga:</span>
+            </div>
+            <div class="benchmark-baris">
+              <span>Cek tetangga</span>
               <b id="cekAwal">–</b>
-            </p>
-            <p>
-              <span>Dijkstra dijalankan:</span>
+            </div>
+            <div class="benchmark-baris">
+              <span>Dijkstra dijalankan</span>
               <b id="runAwal">–</b>
-            </p>
-          </article>
+            </div>
+          </div>
+        </article>
 
-          <article class="kotak-benchmark">
-            <h3>Setelah dioptimisasi</h3>
-            <p>
-              <span>Waktu proses (ms):</span>
-              <b id="waktuOpt">–</b>
-            </p>
-            <p>
-              <span>Kompleksitas waktu:</span>
+        <article class="kotak-benchmark kotak-opt">
+          <div class="benchmark-kepala">
+            <div>
+              <h3>Setelah dioptimisasi</h3>
+              <p>Dijkstra multi-source</p>
+            </div>
+            <span class="badge-bench">1×</span>
+          </div>
+
+          <div class="benchmark-isi">
+            <div class="benchmark-baris">
+              <span>Waktu proses</span>
+              <b><span id="waktuOpt">–</span> <span class="satuan">ms</span></b>
+            </div>
+            <div class="benchmark-baris baris-formula">
+              <span>Kompleksitas waktu</span>
               <b>O(V log V + E)</b>
-            </p>
-            <p>
-              <span>Kompleksitas ruang:</span>
+            </div>
+            <div class="benchmark-baris baris-formula">
+              <span>Kompleksitas ruang</span>
               <b>O(V + E)</b>
-            </p>
-            <p>
-              <span>Node diproses:</span>
+            </div>
+            <div class="benchmark-baris">
+              <span>Node diproses</span>
               <b id="nodeOpt">–</b>
-            </p>
-            <p>
-              <span>Cek tetangga:</span>
+            </div>
+            <div class="benchmark-baris">
+              <span>Cek tetangga</span>
               <b id="cekOpt">–</b>
-            </p>
-            <p>
-              <span>Dijkstra dijalankan:</span>
+            </div>
+            <div class="benchmark-baris">
+              <span>Dijkstra dijalankan</span>
               <b id="runOpt">–</b>
-            </p>
-          </article>
+            </div>
+          </div>
+        </article>
 
-          <p class="catatan-ruang">
-            * Ruang bantu di luar graf dan rute hasil. Keduanya memakai
-            <b>O(V + E)</b>; menyimpan rute tiap konsumen menambah
-            <b>O(K × V)</b> pada kedua algoritma.
-          </p>
+        <p class="catatan-ruang">
+          Keduanya memakai ruang bantu O(V + E). Multi-source menambah array
+          asal, sedangkan versi awal memakai penanda per putaran.
+        </p>
 
-          <p class="banding" id="banding">
-            Tekan ▶ untuk melihat perbandingan waktu dan pengecekan.
-          </p>
+        <p id="banding">
+          Jalankan kedua simulasi untuk melihat perbandingan.
+        </p>
 
+        <div class="benchmark-bawah">
           <details class="benchmark-besar">
             <summary>Benchmark graf besar (10.000 node)</summary>
-            <button id="bench" class="tombol-kecil" type="button">
-              Jalankan benchmark
-            </button>
-            <div id="out" class="keluaran-benchmark"></div>
+            <button id="bench" type="button">Jalankan benchmark</button>
+            <div id="out">Belum dijalankan.</div>
           </details>
-        </section>
+
+          <p class="catatan-kaki">
+            Benchmark diukur di browser. Animasi tidak dihitung.
+          </p>
+        </div>
       </aside>
-    </main>
+    </div>
 
     <script src="script.js"></script>
+    <script src="peta.js"></script>
+    <script src="app.js"></script>
   </body>
 </html>
