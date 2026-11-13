@@ -36,7 +36,7 @@ function clampBulat(nilai, min, max, cadangan) {
 
 // Baca input langsung dari user, lalu rapikan supaya selalu valid
 function bacaInput() {
-  const n = clampBulat($("n").value, 5, 20, 9);
+  const n = clampBulat($("n").value, 5, 20, 20);
   const V = n * n;
   const r = clampBulat($("r").value, 1, Math.min(50, V - 1), 4);
   const k = clampBulat($("k").value, 1, V - r, 20);
@@ -211,7 +211,7 @@ function terapkanData(buatPetaBaru = false) {
 }
 
 function resetData(pesanReset) {
-  $("n").value = 9;
+  $("n").value = 20;
   $("r").value = 4;
   $("k").value = 20;
   peta = null;

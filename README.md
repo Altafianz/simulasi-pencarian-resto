@@ -14,8 +14,9 @@ Keduanya menggunakan graf berbobot, adjacency list, dan Min-Heap.
 ## Fitur
 
 - Simulasi pencarian restoran terdekat.
-- Pengaturan jumlah konsumen dan restoran.
-- Visualisasi proses pencarian pada peta.
+- Pengaturan jumlah konsumen, restoran, dan ukuran peta (default 20×20).
+- Peta kota organik: jalan arteri panjang, jalan kecil bercabang, jalan buntu/cul-de-sac, dan blok bangunan yang mengikuti bentuk jalan.
+- Visualisasi proses pencarian pada peta dengan animasi rute yang mengalir.
 - Mode hambatan dinamis: klik jalan atau persimpangan untuk menutup/membukanya.
 - Rute kedua algoritma langsung dihitung ulang setelah hambatan berubah, termasuk saat animasi sedang berjalan.
 - Tombol Reset Hambatan untuk membuka semua hambatan tanpa mengubah data konsumen/restoran.

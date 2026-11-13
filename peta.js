@@ -103,24 +103,33 @@ const WARNA_BANGUNAN = [
   "#b9ddd3",
 ];
 
-function blokBangunan(pts, idx) {
-  const tengah = pusat(pts);
-  const sudut = Math.atan2(pts[1][1] - pts[0][1], pts[1][0] - pts[0][0]);
-  const lebar = (jarak(pts[0], pts[1]) + jarak(pts[3], pts[2])) / 2;
-  const tinggi = (jarak(pts[0], pts[3]) + jarak(pts[1], pts[2])) / 2;
+const WARNA_DASAR_BLOK = [
+  "#f8ebd7",
+  "#f6e6cf",
+  "#faefdd",
+  "#f3e2cb",
+  "#f7ead8",
+];
+
+function blokBangunan(pts, idx, warnaDasar) {
+  // Latar blok memenuhi sel tanpa garis tepi. Batas blok baru terlihat dari
+  // jalan yang digambar di atasnya, jadi sel-sel sekampung menyatu.
+  let svg = `<polygon points="${poin(pts)}" fill="${warnaDasar}"/>`;
+
+  // Detail bangunan diberi jarak dari tepi agar tidak menutupi jalan.
+  const dalam = insetPolygon(pts, 0.78);
+  const tengah = pusat(dalam);
+  const sudut = Math.atan2(
+    dalam[1][1] - dalam[0][1],
+    dalam[1][0] - dalam[0][0],
+  );
+  const lebar = (jarak(dalam[0], dalam[1]) + jarak(dalam[3], dalam[2])) / 2;
+  const tinggi = (jarak(dalam[0], dalam[3]) + jarak(dalam[1], dalam[2])) / 2;
   const warna =
     WARNA_BANGUNAN[
       Math.floor(acakSel(idx, 13) * WARNA_BANGUNAN.length) %
         WARNA_BANGUNAN.length
     ];
-
-  let svg = "";
-  svg += `<polygon points="${poin(
-    pts.map((p) => [p[0], p[1] + 3]),
-  )}" fill="rgba(36,56,47,.09)"/>`;
-  svg += `<polygon points="${poin(
-    pts,
-  )}" fill="#f8ebd7" stroke="#dfc7a8" stroke-width="1.4"/>`;
 
   const duaBangunan = acakSel(idx, 17) > 0.42;
   const jumlah = duaBangunan ? 2 : 1;
@@ -129,9 +138,7 @@ function blokBangunan(pts, idx) {
   for (let j = 0; j < jumlah; j++) {
     const bw = lebar * (0.32 + acakSel(idx, 19 + j) * 0.22);
     const bh = tinggi * (0.3 + acakSel(idx, 29 + j) * 0.2);
-    const ox = duaBangunan
-      ? (j === 0 ? -1 : 1) * lebar * 0.18
-      : 0;
+    const ox = duaBangunan ? (j === 0 ? -1 : 1) * lebar * 0.18 : 0;
     const oy = (acakSel(idx, 41 + j) - 0.5) * tinggi * 0.16;
 
     svg += `<g transform="translate(${fmt(tengah[0])} ${fmt(
@@ -159,16 +166,12 @@ function blokBangunan(pts, idx) {
 }
 
 function blokTaman(pts, idx) {
-  const tengah = pusat(pts);
-  const lebar = (jarak(pts[0], pts[1]) + jarak(pts[3], pts[2])) / 2;
-  const tinggi = (jarak(pts[0], pts[3]) + jarak(pts[1], pts[2])) / 2;
+  let svg = `<polygon points="${poin(pts)}" fill="#cbe3b9"/>`;
 
-  let svg = `<polygon points="${poin(
-    pts.map((p) => [p[0], p[1] + 3]),
-  )}" fill="rgba(36,56,47,.07)"/>`;
-  svg += `<polygon points="${poin(
-    pts,
-  )}" fill="#cbe3b9" stroke="#a9c98e" stroke-width="1.4"/>`;
+  const dalam = insetPolygon(pts, 0.82);
+  const tengah = pusat(dalam);
+  const lebar = (jarak(dalam[0], dalam[1]) + jarak(dalam[3], dalam[2])) / 2;
+  const tinggi = (jarak(dalam[0], dalam[3]) + jarak(dalam[1], dalam[2])) / 2;
 
   const jumlah = 3 + Math.floor(acakSel(idx, 23) * 3);
   for (let j = 0; j < jumlah; j++) {
@@ -182,13 +185,11 @@ function blokTaman(pts, idx) {
 }
 
 function blokAir(pts, idx) {
+  let svg = `<polygon points="${poin(pts)}" fill="#b8dfe8"/>`;
+
   const tengah = pusat(pts);
   const lebar = (jarak(pts[0], pts[1]) + jarak(pts[3], pts[2])) / 2;
   const tinggi = (jarak(pts[0], pts[3]) + jarak(pts[1], pts[2])) / 2;
-
-  let svg = `<polygon points="${poin(
-    pts,
-  )}" fill="#b8dfe8" stroke="#91c6d4" stroke-width="1.4"/>`;
 
   for (let j = 0; j < 2; j++) {
     const y = tengah[1] + (j === 0 ? -0.14 : 0.16) * tinggi;
@@ -211,13 +212,12 @@ function blokAir(pts, idx) {
 }
 
 function blokPlaza(pts, idx) {
-  const tengah = pusat(pts);
-  const lebar = (jarak(pts[0], pts[1]) + jarak(pts[3], pts[2])) / 2;
-  const tinggi = (jarak(pts[0], pts[3]) + jarak(pts[1], pts[2])) / 2;
+  let svg = `<polygon points="${poin(pts)}" fill="#efe2c8"/>`;
 
-  let svg = `<polygon points="${poin(
-    pts,
-  )}" fill="#efe2c8" stroke="#d6c3a0" stroke-width="1.4"/>`;
+  const dalam = insetPolygon(pts, 0.82);
+  const tengah = pusat(dalam);
+  const lebar = (jarak(dalam[0], dalam[1]) + jarak(dalam[3], dalam[2])) / 2;
+  const tinggi = (jarak(dalam[0], dalam[3]) + jarak(dalam[1], dalam[2])) / 2;
 
   for (let j = 0; j < 5; j++) {
     const x = tengah[0] + (acakSel(idx, 53 + j) - 0.5) * lebar * 0.5;
@@ -233,27 +233,47 @@ function blokPlaza(pts, idx) {
 
 function blokKota(peta) {
   const n = peta.n;
-  const faktor = n >= 15 ? 0.8 : 0.86;
   let svg = "";
+
+  // Hitung luas tiap blok agar blok raksasa tidak berubah jadi danau/taman.
+  const luas = new Map();
+  for (const root of peta.blok) {
+    luas.set(root, (luas.get(root) || 0) + 1);
+  }
 
   for (let baris = 0; baris < n - 1; baris++) {
     for (let kolom = 0; kolom < n - 1; kolom++) {
       const idx = baris * (n - 1) + kolom;
-      const pts = insetPolygon(sudutSel(peta, baris, kolom), faktor);
-      const roll = acakSel(idx, 7);
+      const root = peta.blok[idx];
+      const pts = sudutSel(peta, baris, kolom);
+      const roll = acakSel(root, 7);
 
-      if (roll < 0.62) {
-        svg += blokBangunan(pts, idx);
-      } else if (roll < 0.77) {
+      let tipe;
+      if (roll < 0.66) tipe = "bangunan";
+      else if (roll < 0.8) tipe = "taman";
+      else if (roll < 0.86) tipe = "air";
+      else if (roll < 0.96) tipe = "plaza";
+      else tipe = "kosong";
+
+      if ((luas.get(root) || 0) > 10 && tipe !== "bangunan") {
+        tipe = "bangunan";
+      }
+
+      if (tipe === "bangunan") {
+        const warnaDasar =
+          WARNA_DASAR_BLOK[
+            Math.floor(acakSel(root, 91) * WARNA_DASAR_BLOK.length) %
+              WARNA_DASAR_BLOK.length
+          ];
+        svg += blokBangunan(pts, idx, warnaDasar);
+      } else if (tipe === "taman") {
         svg += blokTaman(pts, idx);
-      } else if (roll < 0.86) {
+      } else if (tipe === "air") {
         svg += blokAir(pts, idx);
-      } else if (roll < 0.98) {
+      } else if (tipe === "plaza") {
         svg += blokPlaza(pts, idx);
       } else {
-        svg += `<polygon points="${poin(
-          pts,
-        )}" fill="#efe4cc" opacity=".55"/>`;
+        svg += `<polygon points="${poin(pts)}" fill="#efe4cc" opacity=".55"/>`;
       }
     }
   }
@@ -264,16 +284,84 @@ function blokKota(peta) {
 // ---------------------------------------------------------------------------
 // JALAN
 // ---------------------------------------------------------------------------
-function jalanUtama(peta, u, v) {
-  const n = peta.n;
-  if (v === u + 1) return Math.floor(u / n) % 3 === 0;
-  if (v === u + n) return (u % n) % 3 === 0;
-  return false;
+function acakSisi(peta, u, v, salt) {
+  const a = Math.min(u, v);
+  const b = Math.max(u, v);
+  return acakSel(a * peta.V + b, salt);
+}
+
+function kelasJalan(peta, u, v) {
+  if (!peta.kelasSisi) return 0;
+  return peta.kelasSisi.get(kunciSisi(u, v)) || 0;
+}
+
+function faktorJalan(kelas) {
+  if (kelas === 2) return 1.7;
+  if (kelas === 1) return 1.22;
+  return 1;
 }
 
 function lebarJalan(peta) {
-  const casing = Math.max(12, Math.min(26, 220 / peta.n));
-  return { casing, isi: casing * 0.62 };
+  const casing = Math.max(5.5, Math.min(22, 200 / peta.n));
+  return { casing, isi: casing * 0.58 };
+}
+
+// Titik kontrol kurva dibuat dari pasangan simpul yang lebih kecil lebih dulu.
+// Dengan begitu jalan dan rute yang melintas dari arah mana pun memakai kurva
+// yang sama.
+function kontrolSisi(peta, u, v) {
+  const a = Math.min(u, v);
+  const b = Math.max(u, v);
+  const x1 = peta.x[a];
+  const y1 = peta.y[a];
+  const x2 = peta.x[b];
+  const y2 = peta.y[b];
+  const panjang = Math.hypot(x2 - x1, y2 - y1) || 1;
+  const kelas = kelasJalan(peta, a, b);
+  const acak = acakSisi(peta, a, b, 5);
+  const arah = acak < 0.5 ? -1 : 1;
+  const amplitudo = kelas === 2 ? 0.018 : kelas === 1 ? 0.045 : 0.075;
+  const offset =
+    arah * panjang * amplitudo * (0.4 + acakSisi(peta, a, b, 9) * 0.6);
+  const nx = -(y2 - y1) / panjang;
+  const ny = (x2 - x1) / panjang;
+
+  return [(x1 + x2) / 2 + nx * offset, (y1 + y2) / 2 + ny * offset];
+}
+
+function pathSisi(peta, u, v) {
+  const kontrol = kontrolSisi(peta, u, v);
+  return `M ${fmt(peta.x[u])} ${fmt(peta.y[u])} Q ${fmt(
+    kontrol[0],
+  )} ${fmt(kontrol[1])} ${fmt(peta.x[v])} ${fmt(peta.y[v])}`;
+}
+
+function titikSisi(peta, u, v, t) {
+  const kontrol = kontrolSisi(peta, u, v);
+  const sisa = 1 - t;
+  return [
+    sisa * sisa * peta.x[u] +
+      2 * sisa * t * kontrol[0] +
+      t * t * peta.x[v],
+    sisa * sisa * peta.y[u] +
+      2 * sisa * t * kontrol[1] +
+      t * t * peta.y[v],
+  ];
+}
+
+function pathRute(peta, rute) {
+  if (!rute || rute.length < 2) return "";
+
+  let d = `M ${fmt(peta.x[rute[0]])} ${fmt(peta.y[rute[0]])}`;
+  for (let i = 0; i < rute.length - 1; i++) {
+    const u = rute[i];
+    const v = rute[i + 1];
+    const kontrol = kontrolSisi(peta, u, v);
+    d += ` Q ${fmt(kontrol[0])} ${fmt(kontrol[1])} ${fmt(
+      peta.x[v],
+    )} ${fmt(peta.y[v])}`;
+  }
+  return d;
 }
 
 function gambarJalan(peta) {
@@ -281,29 +369,28 @@ function gambarJalan(peta) {
 
   let casing = "";
   let isi = "";
+  let isiUtama = "";
   let marka = "";
 
   for (let u = 0; u < peta.V; u++) {
     for (const [v] of peta.adj[u]) {
       if (u >= v) continue;
 
-      const utama = jalanUtama(peta, u, v);
-      const cw = utama ? lebarCasing * 1.18 : lebarCasing;
-      const fw = utama ? lebarIsi * 1.18 : lebarIsi;
-      const x1 = fmt(peta.x[u]);
-      const y1 = fmt(peta.y[u]);
-      const x2 = fmt(peta.x[v]);
-      const y2 = fmt(peta.y[v]);
+      const kelas = kelasJalan(peta, u, v);
+      const faktor = faktorJalan(kelas);
+      const cw = lebarCasing * faktor;
+      const fw = lebarIsi * faktor;
+      const d = pathSisi(peta, u, v);
 
-      casing += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#d8c7a5" stroke-width="${cw.toFixed(
+      casing += `<path d="${d}" fill="none" stroke="#d8c7a5" stroke-width="${cw.toFixed(
         1,
-      )}" stroke-linecap="round"/>`;
-      isi += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#fffdf6" stroke-width="${fw.toFixed(
-        1,
-      )}" stroke-linecap="round"/>`;
+      )}" stroke-linecap="round" stroke-linejoin="round"/>`;
 
-      if (utama) {
-        marka += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#e6d7b8" stroke-width="${Math.max(
+      if (kelas === 2) {
+        isiUtama += `<path d="${d}" fill="none" stroke="#fff3d1" stroke-width="${fw.toFixed(
+          1,
+        )}" stroke-linecap="round" stroke-linejoin="round"/>`;
+        marka += `<path d="${d}" fill="none" stroke="#e6d7b8" stroke-width="${Math.max(
           1,
           fw * 0.12,
         ).toFixed(1)}" stroke-dasharray="${Math.max(5, fw * 0.6).toFixed(
@@ -311,11 +398,27 @@ function gambarJalan(peta) {
         )} ${Math.max(6, fw * 0.8).toFixed(
           1,
         )}" stroke-linecap="round" opacity=".8"/>`;
+      } else {
+        isi += `<path d="${d}" fill="none" stroke="#fffdf6" stroke-width="${fw.toFixed(
+          1,
+        )}" stroke-linecap="round" stroke-linejoin="round"/>`;
       }
     }
   }
 
-  return `<g>${casing}</g><g>${isi}</g><g>${marka}</g>`;
+  // Jalan buntu diberi bulatan kecil seperti cul-de-sac / tempat memutar.
+  const rCasing = lebarCasing * 0.72;
+  const rIsi = lebarIsi * 0.72;
+  for (const node of peta.buntu || []) {
+    casing += `<circle cx="${fmt(peta.x[node])}" cy="${fmt(
+      peta.y[node],
+    )}" r="${rCasing.toFixed(1)}" fill="#d8c7a5"/>`;
+    isi += `<circle cx="${fmt(peta.x[node])}" cy="${fmt(
+      peta.y[node],
+    )}" r="${rIsi.toFixed(1)}" fill="#fffdf6"/>`;
+  }
+
+  return `<g>${casing}</g><g>${isi}</g><g>${isiUtama}</g><g>${marka}</g>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -323,8 +426,7 @@ function gambarJalan(peta) {
 // ---------------------------------------------------------------------------
 function buatHitArea(peta, sisiTutup, nodeTutup) {
   const { casing } = lebarJalan(peta);
-  const lebarKlik = Math.max(18, casing * 1.15);
-  const rKlik = Math.max(10, Math.min(16, 150 / peta.n));
+  const rKlik = Math.max(8, Math.min(14, 120 / peta.n));
 
   let sisiSvg = "";
   let nodeSvg = "";
@@ -335,11 +437,15 @@ function buatHitArea(peta, sisiTutup, nodeTutup) {
 
       const kunci = kunciSisi(u, v);
       const tertutup = sisiTutup && sisiTutup.has(kunci);
-      sisiSvg += `<line class="jalan-hit" data-jenis="sisi" data-kunci="${kunci}"${
+      const lebarKlik = Math.max(
+        12,
+        casing * faktorJalan(kelasJalan(peta, u, v)) * 1.15,
+      );
+      sisiSvg += `<path class="jalan-hit" data-jenis="sisi" data-kunci="${kunci}"${
         tertutup ? ' data-tutup="1"' : ""
-      } x1="${fmt(peta.x[u])}" y1="${fmt(peta.y[u])}" x2="${fmt(
-        peta.x[v],
-      )}" y2="${fmt(peta.y[v])}" stroke-width="${lebarKlik.toFixed(1)}"/>`;
+      } d="${pathSisi(peta, u, v)}" stroke-width="${lebarKlik.toFixed(
+        1,
+      )}"/>`;
     }
   }
 
@@ -376,8 +482,7 @@ function buatVisualHambatan(peta, sisiTutup, nodeTutup) {
   if (!adaSisi && !adaNode) return "";
 
   const { casing } = lebarJalan(peta);
-  const rIkon = Math.max(7, Math.min(11, 90 / peta.n));
-  const tebalGaris = Math.max(4, casing * 0.42);
+  const rIkon = Math.max(6, Math.min(10, 70 / peta.n));
   let svg = "";
 
   if (adaSisi) {
@@ -394,16 +499,15 @@ function buatVisualHambatan(peta, sisiTutup, nodeTutup) {
         continue;
       }
 
-      svg += `<line x1="${fmt(peta.x[a])}" y1="${fmt(peta.y[a])}" x2="${fmt(
-        peta.x[b],
-      )}" y2="${fmt(peta.y[b])}" stroke="#d93025" stroke-width="${tebalGaris.toFixed(
+      const tebalGaris = Math.max(
+        3,
+        casing * faktorJalan(kelasJalan(peta, a, b)) * 0.42,
+      );
+      svg += `<path d="${pathSisi(peta, a, b)}" fill="none" stroke="#d93025" stroke-width="${tebalGaris.toFixed(
         1,
       )}" stroke-linecap="round" opacity=".42"/>`;
-      svg += ikonHambatan(
-        (peta.x[a] + peta.x[b]) / 2,
-        (peta.y[a] + peta.y[b]) / 2,
-        rIkon,
-      );
+      const tengah = titikSisi(peta, a, b, 0.5);
+      svg += ikonHambatan(tengah[0], tengah[1], rIkon);
     }
   }
 
@@ -592,7 +696,7 @@ function gambarPeta(hasil, jumlahTampil) {
   }
 
   const n = peta.n;
-  const casingRute = Math.max(6, Math.min(11, 100 / n));
+  const casingRute = Math.max(4, Math.min(9, 70 / n));
   const isiRute = casingRute * 0.58;
 
   let ruteSvg = "";
@@ -607,11 +711,9 @@ function gambarPeta(hasil, jumlahTampil) {
     const progres = Math.max(0, Math.min(1, tampil - i));
     if (progres <= 0) continue;
 
-    const titik = h.rute
-      .map((node) => `${fmt(peta.x[node])},${fmt(peta.y[node])}`)
-      .join(" ");
+    const d = pathRute(peta, h.rute);
 
-    // pathLength="1" membuat panjang polyline dinormalisasi menjadi 1,
+    // pathLength="1" membuat panjang path dinormalisasi menjadi 1,
     // lalu stroke-dashoffset mengatur seberapa jauh garis sudah tergambar.
     const animasiRute =
       progres >= 1
@@ -620,10 +722,10 @@ function gambarPeta(hasil, jumlahTampil) {
             1 - progres
           ).toFixed(4)}"`;
 
-    ruteSvg += `<polyline points="${titik}"${animasiRute} fill="none" stroke="#fffdf6" stroke-width="${casingRute.toFixed(
+    ruteSvg += `<path d="${d}"${animasiRute} fill="none" stroke="#fffdf6" stroke-width="${casingRute.toFixed(
       1,
     )}" stroke-linecap="round" stroke-linejoin="round" opacity=".92"/>`;
-    ruteSvg += `<polyline points="${titik}"${animasiRute} fill="none" stroke="#f0543a" stroke-width="${isiRute.toFixed(
+    ruteSvg += `<path d="${d}"${animasiRute} fill="none" stroke="#f0543a" stroke-width="${isiRute.toFixed(
       1,
     )}" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>`;
   }
