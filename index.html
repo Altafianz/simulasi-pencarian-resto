@@ -112,7 +112,10 @@
         <div class="panel-bawah">
           <section class="tips" aria-label="Cara pakai">
             <p class="eyebrow">Cara Pakai</p>
-            <p class="tips-satu">Atur data → Save → putar.</p>
+            <p class="tips-satu">
+              Atur data → Save → aktifkan Mode Hambatan → putar → klik jalan
+              atau persimpangan.
+            </p>
           </section>
 
           <section class="legenda" aria-label="Legenda peta">
@@ -133,6 +136,13 @@
                 <span class="ikon-legenda ikon-rute" aria-hidden="true"></span>
                 <span>Rute terdekat</span>
               </div>
+              <div class="legenda-item">
+                <span
+                  class="ikon-legenda ikon-hambatan"
+                  aria-hidden="true"
+                ></span>
+                <span>Hambatan</span>
+              </div>
             </div>
           </section>
 
@@ -151,7 +161,8 @@
             <h1>Simulasi Resto Terdekat</h1>
             <p class="subjudul">
               Bandingkan Dijkstra per konsumen dengan multi-source Dijkstra
-              pada peta kota yang sama.
+              pada peta kota yang sama. Tutup jalan atau persimpangan untuk
+              melihat rute berubah secara langsung.
             </p>
           </div>
           <span class="pill-info">Multi-source</span>
@@ -163,9 +174,27 @@
               <p class="eyebrow">Peta Kota</p>
               <h2>Peta</h2>
             </div>
-            <button id="reset" class="tombol tombol-reset" type="button">
-              Reset
-            </button>
+            <div class="aksi-peta">
+              <button
+                id="modeHambatan"
+                class="tombol tombol-hambatan"
+                type="button"
+                aria-pressed="false"
+                title="Klik jalan atau persimpangan di peta untuk menutup/membukanya"
+              >
+                Mode Hambatan
+              </button>
+              <button
+                id="resetHambatan"
+                class="tombol tombol-reset-hambatan"
+                type="button"
+              >
+                Reset Hambatan
+              </button>
+              <button id="reset" class="tombol tombol-reset" type="button">
+                Reset
+              </button>
+            </div>
           </div>
 
           <div class="bingkai-peta">
@@ -174,7 +203,7 @@
               viewBox="0 0 1200 900"
               preserveAspectRatio="xMidYMid meet"
               role="img"
-              aria-label="Peta kota dengan resto, konsumen, dan rute terdekat."
+              aria-label="Peta kota dengan resto, konsumen, rute terdekat, dan hambatan."
             ></svg>
           </div>
 
@@ -190,13 +219,18 @@
         <div class="ringkasan">
           <div class="chip-ringkasan">
             <span class="ikon-ringkas ikon-resto" aria-hidden="true"></span>
-            <span>Restoran saat ini</span>
+            <span>Restoran</span>
             <b id="ringkasResto">–</b>
           </div>
           <div class="chip-ringkasan">
             <span class="ikon-ringkas ikon-konsumen" aria-hidden="true"></span>
-            <span>Konsumen saat ini</span>
+            <span>Konsumen</span>
             <b id="ringkasKonsumen">–</b>
+          </div>
+          <div class="chip-ringkasan">
+            <span class="ikon-ringkas ikon-hambatan" aria-hidden="true"></span>
+            <span>Hambatan</span>
+            <b id="ringkasHambatan">0</b>
           </div>
         </div>
       </main>
@@ -284,7 +318,8 @@
 
         <p class="catatan-ruang">
           Keduanya memakai ruang bantu O(V + E). Multi-source menambah array
-          asal, sedangkan versi awal memakai penanda per putaran.
+          asal, sedangkan versi awal memakai penanda per putaran. Saat ada
+          hambatan, V dan E aktif mengecil sehingga rumus tetap berlaku.
         </p>
 
         <p id="banding">

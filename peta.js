@@ -18,6 +18,9 @@ const PALET = [
   "#c0392b",
 ];
 
+const WARNA_KONSUMEN = "#e23b2e";
+const WARNA_KONSUMEN_NONAKTIF = "#9aa3b2";
+
 const PETA_VIEW = {
   lebar: 1200,
   tinggi: 900,
@@ -268,10 +271,13 @@ function jalanUtama(peta, u, v) {
   return false;
 }
 
+function lebarJalan(peta) {
+  const casing = Math.max(12, Math.min(26, 220 / peta.n));
+  return { casing, isi: casing * 0.62 };
+}
+
 function gambarJalan(peta) {
-  const n = peta.n;
-  const lebarCasing = Math.max(12, Math.min(26, 220 / n));
-  const lebarIsi = lebarCasing * 0.62;
+  const { casing: lebarCasing, isi: lebarIsi } = lebarJalan(peta);
 
   let casing = "";
   let isi = "";
@@ -310,6 +316,122 @@ function gambarJalan(peta) {
   }
 
   return `<g>${casing}</g><g>${isi}</g><g>${marka}</g>`;
+}
+
+// ---------------------------------------------------------------------------
+// HAMBATAN: AREA KLIK & VISUAL
+// ---------------------------------------------------------------------------
+function buatHitArea(peta, sisiTutup, nodeTutup) {
+  const { casing } = lebarJalan(peta);
+  const lebarKlik = Math.max(18, casing * 1.15);
+  const rKlik = Math.max(10, Math.min(16, 150 / peta.n));
+
+  let sisiSvg = "";
+  let nodeSvg = "";
+
+  for (let u = 0; u < peta.V; u++) {
+    for (const [v] of peta.adj[u]) {
+      if (u >= v) continue;
+
+      const kunci = kunciSisi(u, v);
+      const tertutup = sisiTutup && sisiTutup.has(kunci);
+      sisiSvg += `<line class="jalan-hit" data-jenis="sisi" data-kunci="${kunci}"${
+        tertutup ? ' data-tutup="1"' : ""
+      } x1="${fmt(peta.x[u])}" y1="${fmt(peta.y[u])}" x2="${fmt(
+        peta.x[v],
+      )}" y2="${fmt(peta.y[v])}" stroke-width="${lebarKlik.toFixed(1)}"/>`;
+    }
+  }
+
+  for (let i = 0; i < peta.V; i++) {
+    const tertutup = nodeTutup && nodeTutup.has(i);
+    nodeSvg += `<circle class="simpul-hit" data-jenis="node" data-node="${i}"${
+      tertutup ? ' data-tutup="1"' : ""
+    } cx="${fmt(peta.x[i])}" cy="${fmt(peta.y[i])}" r="${rKlik.toFixed(1)}"/>`;
+  }
+
+  return `<g>${sisiSvg}</g><g>${nodeSvg}</g>`;
+}
+
+function ikonHambatan(x, y, r) {
+  const s = r * 0.48;
+  const tebal = Math.max(1.8, r * 0.24).toFixed(1);
+  return `<g transform="translate(${fmt(x)} ${fmt(y)})" pointer-events="none">
+    <circle r="${r.toFixed(1)}" fill="#d93025" stroke="#fffaf0" stroke-width="${Math.max(
+      1.5,
+      r * 0.2,
+    ).toFixed(1)}"/>
+    <line x1="${(-s).toFixed(1)}" y1="${(-s).toFixed(1)}" x2="${s.toFixed(
+      1,
+    )}" y2="${s.toFixed(1)}" stroke="#fffaf0" stroke-width="${tebal}" stroke-linecap="round"/>
+    <line x1="${(-s).toFixed(1)}" y1="${s.toFixed(1)}" x2="${s.toFixed(
+      1,
+    )}" y2="${(-s).toFixed(1)}" stroke="#fffaf0" stroke-width="${tebal}" stroke-linecap="round"/>
+  </g>`;
+}
+
+function buatVisualHambatan(peta, sisiTutup, nodeTutup) {
+  const adaSisi = sisiTutup && sisiTutup.size > 0;
+  const adaNode = nodeTutup && nodeTutup.size > 0;
+  if (!adaSisi && !adaNode) return "";
+
+  const { casing } = lebarJalan(peta);
+  const rIkon = Math.max(7, Math.min(11, 90 / peta.n));
+  const tebalGaris = Math.max(4, casing * 0.42);
+  let svg = "";
+
+  if (adaSisi) {
+    for (const kunci of sisiTutup) {
+      const [a, b] = kunci.split("-").map(Number);
+      if (
+        !Number.isInteger(a) ||
+        !Number.isInteger(b) ||
+        a < 0 ||
+        b < 0 ||
+        a >= peta.V ||
+        b >= peta.V
+      ) {
+        continue;
+      }
+
+      svg += `<line x1="${fmt(peta.x[a])}" y1="${fmt(peta.y[a])}" x2="${fmt(
+        peta.x[b],
+      )}" y2="${fmt(peta.y[b])}" stroke="#d93025" stroke-width="${tebalGaris.toFixed(
+        1,
+      )}" stroke-linecap="round" opacity=".42"/>`;
+      svg += ikonHambatan(
+        (peta.x[a] + peta.x[b]) / 2,
+        (peta.y[a] + peta.y[b]) / 2,
+        rIkon,
+      );
+    }
+  }
+
+  if (adaNode) {
+    for (const node of nodeTutup) {
+      if (node < 0 || node >= peta.V) continue;
+      svg += `<circle cx="${fmt(peta.x[node])}" cy="${fmt(
+        peta.y[node],
+      )}" r="${(rIkon * 1.55).toFixed(1)}" fill="rgba(217,48,37,.18)"/>`;
+      svg += ikonHambatan(peta.x[node], peta.y[node], rIkon);
+    }
+  }
+
+  return svg;
+}
+
+function perbaruiHambatan() {
+  const svg = document.getElementById("peta");
+  if (!svg || !peta) return;
+
+  const lapisan = svg.querySelector("#lapisan-hambatan");
+  const interaksi = svg.querySelector("#lapisan-interaksi");
+  if (lapisan) {
+    lapisan.innerHTML = buatVisualHambatan(peta, hambatanSisi, hambatanNode);
+  }
+  if (interaksi) {
+    interaksi.innerHTML = buatHitArea(peta, hambatanSisi, hambatanNode);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -421,31 +543,13 @@ function svgPin(x, y, warna, nomor, r, tampilNomor) {
   return svg;
 }
 
-function svgKonsumen(x, y, warna, sudah, r) {
-  const stroke = sudah ? warna : "#9aa3b2";
-  const fill = sudah ? "#fffaf0" : "#f1ede2";
-  const opacity = sudah ? 1 : 0.68;
-  const dash = sudah
-    ? ""
-    : `stroke-dasharray="${(r * 0.35).toFixed(1)} ${(r * 0.3).toFixed(1)}"`;
+function svgKonsumen(x, y, sudah, r) {
+  // Konsumen memakai bentuk pin yang sama dengan resto, tetapi warna merah
+  // dan tanpa nomor. Pin abu-abu berarti konsumen belum terlayani.
+  const warna = sudah ? WARNA_KONSUMEN : WARNA_KONSUMEN_NONAKTIF;
+  const opacity = sudah ? 1 : 0.72;
 
-  let svg = `<g opacity="${opacity}">`;
-  svg += `<circle cx="${fmt(x)}" cy="${fmt(y + 1.4)}" r="${r.toFixed(
-    1,
-  )}" fill="rgba(36,56,47,.10)"/>`;
-  svg += `<circle cx="${fmt(x)}" cy="${fmt(y)}" r="${r.toFixed(
-    1,
-  )}" fill="${fill}" stroke="${stroke}" stroke-width="${Math.max(
-    2,
-    r * 0.28,
-  ).toFixed(1)}" ${dash}/>`;
-  if (sudah) {
-    svg += `<circle cx="${fmt(x)}" cy="${fmt(y)}" r="${(
-      r * 0.34
-    ).toFixed(1)}" fill="${warna}"/>`;
-  }
-  svg += `</g>`;
-  return svg;
+  return `<g opacity="${opacity}">${svgPin(x, y, warna, 0, r, false)}</g>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -455,11 +559,15 @@ function pastikanStruktur(svg) {
   const statis = svg.querySelector("#lapisan-statis");
   const rute = svg.querySelector("#lapisan-rute");
   const penanda = svg.querySelector("#lapisan-penanda");
+  const hambatan = svg.querySelector("#lapisan-hambatan");
+  const interaksi = svg.querySelector("#lapisan-interaksi");
 
-  if (!statis || !rute || !penanda) {
+  if (!statis || !rute || !penanda || !hambatan || !interaksi) {
     svg.innerHTML = `<g id="lapisan-statis"></g>
       <g id="lapisan-rute" transform="${TRANSFORM_PETA}"></g>
-      <g id="lapisan-penanda" transform="${TRANSFORM_PETA}"></g>`;
+      <g id="lapisan-penanda" transform="${TRANSFORM_PETA}"></g>
+      <g id="lapisan-hambatan" transform="${TRANSFORM_PETA}"></g>
+      <g id="lapisan-interaksi" transform="${TRANSFORM_PETA}"></g>`;
     cachePeta = { peta: null, svg: "" };
   }
 }
@@ -480,46 +588,57 @@ function gambarPeta(hasil, jumlahTampil) {
     const statis = buatPetaStatis(peta);
     svg.querySelector("#lapisan-statis").innerHTML = statis;
     cachePeta = { peta, svg: statis };
+    perbaruiHambatan();
   }
-
-  const warna = new Map();
-  daftarResto.forEach((resto, i) => {
-    warna.set(resto, PALET[i % PALET.length]);
-  });
 
   const n = peta.n;
   const casingRute = Math.max(6, Math.min(11, 100 / n));
   const isiRute = casingRute * 0.58;
 
   let ruteSvg = "";
-  for (let i = 0; i < tampil; i++) {
+  // `tampil` boleh pecahan. Contoh 6.4 berarti 6 rute sudah penuh dan rute
+  // ke-7 sedang tergambar 40% dari arah resto menuju konsumen.
+  const batasRute = Math.min(total, Math.ceil(tampil));
+
+  for (let i = 0; i < batasRute; i++) {
     const h = hasil.hasil[i];
     if (!h || h.resto < 0 || h.rute.length < 2) continue;
+
+    const progres = Math.max(0, Math.min(1, tampil - i));
+    if (progres <= 0) continue;
 
     const titik = h.rute
       .map((node) => `${fmt(peta.x[node])},${fmt(peta.y[node])}`)
       .join(" ");
 
-    ruteSvg += `<polyline points="${titik}" fill="none" stroke="#fffdf6" stroke-width="${casingRute.toFixed(
+    // pathLength="1" membuat panjang polyline dinormalisasi menjadi 1,
+    // lalu stroke-dashoffset mengatur seberapa jauh garis sudah tergambar.
+    const animasiRute =
+      progres >= 1
+        ? ""
+        : ` pathLength="1" stroke-dasharray="1" stroke-dashoffset="${(
+            1 - progres
+          ).toFixed(4)}"`;
+
+    ruteSvg += `<polyline points="${titik}"${animasiRute} fill="none" stroke="#fffdf6" stroke-width="${casingRute.toFixed(
       1,
     )}" stroke-linecap="round" stroke-linejoin="round" opacity=".92"/>`;
-    ruteSvg += `<polyline points="${titik}" fill="none" stroke="#f0543a" stroke-width="${isiRute.toFixed(
+    ruteSvg += `<polyline points="${titik}"${animasiRute} fill="none" stroke="#f0543a" stroke-width="${isiRute.toFixed(
       1,
     )}" stroke-linecap="round" stroke-linejoin="round" opacity=".95"/>`;
   }
 
   const rPin = Math.max(14, Math.min(26, 230 / n));
-  const rKonsumen = Math.max(6, Math.min(11, 100 / n));
+  const rKonsumen = Math.max(10, Math.min(17, 150 / n));
   let penandaSvg = "";
 
   daftarKonsumen.forEach((konsumen, i) => {
     const h = hasil.hasil[i];
-    const sudah = i < tampil && h && h.resto >= 0;
-    const warnaCincin = sudah ? warna.get(h.resto) : "#9aa3b2";
+    // Marker menyala tepat saat rute ke konsumen itu selesai tergambar.
+    const sudah = i + 1 <= tampil && h && h.resto >= 0;
     penandaSvg += svgKonsumen(
       peta.x[konsumen],
       peta.y[konsumen],
-      warnaCincin,
       Boolean(sudah),
       rKonsumen,
     );

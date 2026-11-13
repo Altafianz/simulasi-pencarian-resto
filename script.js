@@ -7,6 +7,12 @@
 //   SESUDAH : Dijkstra MULTI-SOURCE. Semua resto jadi titik awal (jarak 0),
 //             Dijkstra dijalankan SATU KALI, lalu tiap konsumen tinggal
 //             membaca resto terdekatnya. Ini sah karena jalan dua arah.
+//
+// KEDUANYA mendukung hambatan dinamis:
+//   - hambatanSisi : Set berisi kunci jalan "u-v" yang ditutup.
+//   - hambatanNode : Set berisi nomor persimpangan yang ditutup.
+// Hambatan hanya menyaring edge/node saat relaksasi, jadi graf asli tidak
+// diubah dan hasilnya tetap Dijkstra biasa pada subgraf yang masih terbuka.
 // ============================================================================
 
 // ============================================================================
@@ -129,13 +135,30 @@ function buatPenanda(V, daftar) {
   return penanda;
 }
 
+// Kunci jalan dua arah. Dipakai agar (u,v) dan (v,u) dianggap jalan yang sama.
+function kunciSisi(u, v) {
+  return u < v ? `${u}-${v}` : `${v}-${u}`;
+}
+
+// Set kosong dipakai saat benchmark memanggil algoritma tanpa hambatan.
+const SISI_KOSONG = new Set();
+const NODE_KOSONG = new Set();
+
 // ============================================================================
 // 3. VERSI SEBELUM: Dijkstra per konsumen
 //    Untuk tiap konsumen: jalankan Dijkstra dari konsumen itu, dan berhenti
 //    begitu resto pertama keluar dari priority queue.
 // ============================================================================
-function dijkstraPerKonsumen(peta, penandaResto, daftarKonsumen) {
+function dijkstraPerKonsumen(
+  peta,
+  penandaResto,
+  daftarKonsumen,
+  hambatanSisi = null,
+  hambatanNode = null,
+) {
   const V = peta.V;
+  const sisiTutup = hambatanSisi || SISI_KOSONG;
+  const nodeTutup = hambatanNode || NODE_KOSONG;
   const dist = new Float64Array(V);
   const parent = new Int32Array(V);
   const dilihat = new Int32Array(V); // penanda "sudah diisi pada putaran ini"
@@ -161,6 +184,9 @@ function dijkstraPerKonsumen(peta, penandaResto, daftarKonsumen) {
 
       // entri usang (sudah ada jarak yang lebih baik), lewati
       if (jarak > dist[u]) continue;
+
+      // persimpangan yang ditutup tidak boleh diproses/dilewati
+      if (nodeTutup.has(u)) continue;
       nodeDiproses++;
 
       // EARLY EXIT: resto pertama yang keluar dari heap = resto terdekat
@@ -170,6 +196,9 @@ function dijkstraPerKonsumen(peta, penandaResto, daftarKonsumen) {
       }
 
       for (const [v, bobot] of peta.adj[u]) {
+        // lewati persimpangan atau jalan yang sedang ditutup
+        if (nodeTutup.has(v) || sisiTutup.has(kunciSisi(u, v))) continue;
+
         cekTetangga++;
         const jarakBaru = jarak + bobot;
         const belumPernahDiisi = dilihat[v] !== putaran;
@@ -211,8 +240,16 @@ function dijkstraPerKonsumen(peta, penandaResto, daftarKonsumen) {
 //    Semua resto dimasukkan ke heap dengan jarak 0, lalu Dijkstra dijalankan
 //    sekali sampai selesai. Tiap node mencatat resto asalnya (asal[]).
 // ============================================================================
-function dijkstraMultiSource(peta, daftarResto, daftarKonsumen) {
+function dijkstraMultiSource(
+  peta,
+  daftarResto,
+  daftarKonsumen,
+  hambatanSisi = null,
+  hambatanNode = null,
+) {
   const V = peta.V;
+  const sisiTutup = hambatanSisi || SISI_KOSONG;
+  const nodeTutup = hambatanNode || NODE_KOSONG;
   const dist = new Float64Array(V).fill(Infinity);
   const parent = new Int32Array(V).fill(-1);
   const asal = new Int32Array(V).fill(-1); // resto terdekat dari tiap node
@@ -221,8 +258,9 @@ function dijkstraMultiSource(peta, daftarResto, daftarKonsumen) {
   let nodeDiproses = 0;
   let cekTetangga = 0;
 
-  // semua resto = titik awal
+  // semua resto yang masih terbuka = titik awal
   for (const resto of daftarResto) {
+    if (nodeTutup.has(resto)) continue;
     dist[resto] = 0;
     asal[resto] = resto;
     heap.push(0, resto);
@@ -232,9 +270,15 @@ function dijkstraMultiSource(peta, daftarResto, daftarKonsumen) {
     const [jarak, u] = heap.pop();
 
     if (jarak > dist[u]) continue;
+
+    // persimpangan yang ditutup tidak boleh diproses/dilewati
+    if (nodeTutup.has(u)) continue;
     nodeDiproses++;
 
     for (const [v, bobot] of peta.adj[u]) {
+      // lewati persimpangan atau jalan yang sedang ditutup
+      if (nodeTutup.has(v) || sisiTutup.has(kunciSisi(u, v))) continue;
+
       cekTetangga++;
       const jarakBaru = jarak + bobot;
 

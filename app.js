@@ -1,8 +1,8 @@
 // ============================================================================
 // UI, ANIMASI, DAN BENCHMARK
 //
-// File ini hanya mengatur tampilan dan interaksi. Semua algoritma tetap berada
-// di script.js dan tidak diubah. Render peta kartun berada di peta.js.
+// File ini mengatur tampilan dan interaksi. Logika algoritma berada di
+// script.js, sedangkan render peta kartun berada di peta.js.
 // ============================================================================
 
 const $ = (id) => document.getElementById(id);
@@ -18,7 +18,12 @@ let hasilAwal;
 let hasilOptimasi;
 let waktuAwal = null;
 let waktuOptimasi = null;
-let animasi = null; // { raf, prefix, hasil, waktu }
+let animasi = null; // { raf, mulai, durasi, jenis, prefix, hasil, waktu, jumlahTampil }
+
+// Hambatan dinamis. Sisi memakai kunci "u-v", node memakai nomor simpul.
+let hambatanSisi = new Set();
+let hambatanNode = new Set();
+let modeHambatan = false;
 
 // ---------------------------------------------------------------------------
 // INPUT & ANGKA
@@ -48,6 +53,7 @@ function bacaInput() {
 function isiRingkasan() {
   $("ringkasResto").textContent = daftarResto.length;
   $("ringkasKonsumen").textContent = daftarKonsumen.length;
+  $("ringkasHambatan").textContent = hambatanSisi.size + hambatanNode.size;
 }
 
 function formatMs(nilai) {
@@ -90,6 +96,11 @@ function perbaruiBanding() {
       "Pengecekan tetangga belum lebih sedikit — tambah jumlah konsumen.";
   }
 
+  const takTerjangkau = hasilOptimasi.hasil.filter((h) => h.resto < 0).length;
+  if (takTerjangkau > 0) {
+    teks += ` <b>${takTerjangkau} konsumen tidak punya rute</b> karena hambatan.`;
+  }
+
   if (waktuAwal > 0 && waktuOptimasi > 0) {
     const rasio = waktuAwal / waktuOptimasi;
     if (rasio >= 1.05) {
@@ -102,10 +113,11 @@ function perbaruiBanding() {
 
 function isiDaftarHasil() {
   $("daftar").textContent = hasilOptimasi.hasil
-    .map(
-      (h, i) =>
-        `Konsumen #${i + 1} (node ${daftarKonsumen[i]}) → resto node ${h.resto}, jarak ${h.jarak.toFixed(1)}`,
-    )
+    .map((h, i) => {
+      const awal = `Konsumen #${i + 1} (node ${daftarKonsumen[i]})`;
+      if (h.resto < 0) return `${awal} → tidak ada rute (terhalang)`;
+      return `${awal} → resto node ${h.resto}, jarak ${h.jarak.toFixed(1)}`;
+    })
     .join("\n");
 }
 
@@ -115,9 +127,21 @@ function isiDaftarHasil() {
 function hitungDanTampilkan() {
   // jalankan kedua versi pada peta yang sama, ukur waktunya
   const t0 = performance.now();
-  const sebelum = dijkstraPerKonsumen(peta, penandaResto, daftarKonsumen);
+  const sebelum = dijkstraPerKonsumen(
+    peta,
+    penandaResto,
+    daftarKonsumen,
+    hambatanSisi,
+    hambatanNode,
+  );
   const t1 = performance.now();
-  const sesudah = dijkstraMultiSource(peta, daftarResto, daftarKonsumen);
+  const sesudah = dijkstraMultiSource(
+    peta,
+    daftarResto,
+    daftarKonsumen,
+    hambatanSisi,
+    hambatanNode,
+  );
   const t2 = performance.now();
 
   hasilAwal = sebelum;
@@ -130,7 +154,26 @@ function hitungDanTampilkan() {
   isiRingkasan();
   perbaruiBanding();
   isiDaftarHasil();
-  gambarPeta(hasilOptimasi, daftarKonsumen.length);
+
+  // Kalau animasi sedang berjalan, jangan tampilkan semua rute sekaligus.
+  // Cukup perbarui data animasinya supaya frame berikutnya memakai hasil baru.
+  if (animasi) {
+    animasi.hasil = animasi.jenis === "awal" ? hasilAwal : hasilOptimasi;
+    animasi.waktu = animasi.jenis === "awal" ? waktuAwal : waktuOptimasi;
+  }
+
+  const hasilTampil = animasi ? animasi.hasil : hasilOptimasi;
+  const jumlahTampil = animasi
+    ? animasi.jumlahTampil
+    : daftarKonsumen.length;
+
+  gambarPeta(hasilTampil, jumlahTampil);
+  perbaruiHambatan();
+}
+
+function kosongkanHambatan() {
+  hambatanSisi.clear();
+  hambatanNode.clear();
 }
 
 function terapkanData(buatPetaBaru = false) {
@@ -140,18 +183,31 @@ function terapkanData(buatPetaBaru = false) {
 
   if (buatPetaBaru || !peta || peta.n !== n) {
     peta = buatPeta(n);
+    // Topologi baru: kunci jalan dan nomor simpul lama tidak berlaku lagi.
+    kosongkanHambatan();
   }
 
-  daftarResto = pilihAcak(peta.V, r);
+  // Jangan menaruh resto/konsumen baru di simpul yang sedang ditutup.
+  const tertutup = new Uint8Array(peta.V);
+  for (const node of hambatanNode) tertutup[node] = 1;
+
+  daftarResto = pilihAcak(peta.V, r, tertutup);
   penandaResto = buatPenanda(peta.V, daftarResto);
-  daftarKonsumen = pilihAcak(peta.V, k, penandaResto);
+
+  const dipakai = new Uint8Array(peta.V);
+  for (const resto of daftarResto) dipakai[resto] = 1;
+  for (const node of hambatanNode) dipakai[node] = 1;
+  daftarKonsumen = pilihAcak(peta.V, k, dipakai);
 
   hitungDanTampilkan();
 
   $("progressWrap").hidden = true;
   setProgress(0);
+  const jumlahHambatan = hambatanSisi.size + hambatanNode.size;
   $("statusText").textContent =
-    "Peta siap. Tekan ▶ untuk memutar simulasi.";
+    jumlahHambatan > 0
+      ? `Peta siap. ${jumlahHambatan} hambatan tetap aktif. Tekan ▶ untuk memutar simulasi.`
+      : "Peta siap. Tekan ▶ untuk memutar simulasi.";
 }
 
 function resetData(pesanReset) {
@@ -159,6 +215,8 @@ function resetData(pesanReset) {
   $("r").value = 4;
   $("k").value = 20;
   peta = null;
+  kosongkanHambatan();
+  setModeHambatan(false);
   terapkanData(true);
   $("statusText").textContent =
     pesanReset || "Peta direset. Tekan ▶ untuk memutar simulasi.";
@@ -183,13 +241,18 @@ function hentikanAnimasi() {
   $("playOpt").classList.remove("playing");
 }
 
+function durasiAnimasi(jenis, total) {
+  // Sengaja lambat supaya aliran rute terlihat jelas dan user sempat
+  // mengklik hambatan di tengah animasi.
+  if (jenis === "awal") {
+    return Math.min(30000, Math.max(12000, total * 300));
+  }
+  return Math.min(20000, Math.max(8000, total * 200));
+}
+
 function mulaiAnimasi(jenis, prefix, hasil, waktu) {
   const total = daftarKonsumen.length;
-
-  // Algoritma awal sengaja lebih lambat: kerja dilakukan per konsumen.
-  const durasi =
-    jenis === "awal" ? Math.min(4800, Math.max(1000, total * 60)) : 700;
-
+  const durasi = durasiAnimasi(jenis, total);
   const mulai = performance.now();
   const tombol = jenis === "awal" ? $("playAwal") : $("playOpt");
 
@@ -199,20 +262,30 @@ function mulaiAnimasi(jenis, prefix, hasil, waktu) {
   tampilkanProgresPanel(prefix, hasil, 0);
 
   const langkah = (sekarang) => {
-    const t = Math.min(1, (sekarang - mulai) / durasi);
-    const jumlahTampil = Math.round(t * total);
+    if (!animasi) return;
 
-    gambarPeta(hasil, jumlahTampil);
+    const t = Math.min(1, (sekarang - animasi.mulai) / animasi.durasi);
+    // Simpan sebagai pecahan supaya rute bisa tergambar sebagian.
+    const jumlahTampil = t * total;
+    const jumlahSelesai = Math.min(total, Math.floor(jumlahTampil));
+    animasi.jumlahTampil = jumlahTampil;
+
+    // Selalu baca dari animasi.hasil supaya hambatan yang diklik di tengah
+    // animasi langsung memakai hasil perhitungan ulang.
+    const hasilKini = animasi.hasil;
+    const prefixKini = animasi.prefix;
+
+    gambarPeta(hasilKini, jumlahTampil);
     setProgress(t * 100);
-    tampilkanProgresPanel(prefix, hasil, t);
+    tampilkanProgresPanel(prefixKini, hasilKini, t);
 
-    if (jenis === "awal") {
+    if (animasi.jenis === "awal") {
       $("statusText").textContent =
-        `Algoritma awal: ${jumlahTampil}/${total} konsumen diproses ` +
+        `Algoritma awal: ${jumlahSelesai}/${total} konsumen diproses ` +
         `(${total}× Dijkstra)...`;
     } else {
       $("statusText").textContent =
-        `Optimisasi: ${jumlahTampil}/${total} konsumen terlayani ` +
+        `Optimisasi: ${jumlahSelesai}/${total} konsumen terlayani ` +
         "(1× Dijkstra)...";
     }
 
@@ -221,29 +294,45 @@ function mulaiAnimasi(jenis, prefix, hasil, waktu) {
       return;
     }
 
+    const hasilAkhir = animasi.hasil;
+    const prefixAkhir = animasi.prefix;
+    const waktuAkhir = animasi.waktu;
+    const terlayani = hasilAkhir.hasil.filter((h) => h.resto >= 0).length;
+    const takTerjangkau = total - terlayani;
+
     animasi = null;
     tombol.classList.remove("playing");
-    isiPanel(prefix, hasil, waktu);
+    isiPanel(prefixAkhir, hasilAkhir, waktuAkhir);
+
+    const infoHambatan =
+      takTerjangkau > 0
+        ? ` ${takTerjangkau} konsumen tidak punya rute karena hambatan.`
+        : "";
 
     if (jenis === "awal") {
       $("statusText").textContent =
-        `Selesai — ${total} konsumen dilayani dengan ${total}× Dijkstra ` +
-        `(${formatMs(waktu)} ms).`;
+        `Selesai — ${terlayani}/${total} konsumen dilayani dengan ${total}× ` +
+        `Dijkstra (${formatMs(waktuAkhir)} ms).${infoHambatan}`;
     } else {
       $("statusText").textContent =
-        `Selesai — semua ${total} konsumen dilayani dengan 1× Dijkstra ` +
-        `(${formatMs(waktu)} ms).`;
+        `Selesai — ${terlayani}/${total} konsumen dilayani dengan 1× ` +
+        `Dijkstra (${formatMs(waktuAkhir)} ms).${infoHambatan}`;
     }
 
     perbaruiBanding();
   };
 
   animasi = {
-    raf: requestAnimationFrame(langkah),
+    raf: 0,
+    mulai,
+    durasi,
+    jenis,
     prefix,
     hasil,
     waktu,
+    jumlahTampil: 0,
   };
+  animasi.raf = requestAnimationFrame(langkah);
 }
 
 function putarSimulasi(jenis) {
@@ -253,7 +342,13 @@ function putarSimulasi(jenis) {
 
   if (jenis === "awal") {
     const t0 = performance.now();
-    const hasil = dijkstraPerKonsumen(peta, penandaResto, daftarKonsumen);
+    const hasil = dijkstraPerKonsumen(
+      peta,
+      penandaResto,
+      daftarKonsumen,
+      hambatanSisi,
+      hambatanNode,
+    );
     const waktu = performance.now() - t0;
 
     hasilAwal = hasil;
@@ -263,7 +358,13 @@ function putarSimulasi(jenis) {
     mulaiAnimasi("awal", "Awal", hasil, waktu);
   } else {
     const t0 = performance.now();
-    const hasil = dijkstraMultiSource(peta, daftarResto, daftarKonsumen);
+    const hasil = dijkstraMultiSource(
+      peta,
+      daftarResto,
+      daftarKonsumen,
+      hambatanSisi,
+      hambatanNode,
+    );
     const waktu = performance.now() - t0;
 
     hasilOptimasi = hasil;
@@ -320,10 +421,93 @@ function jalankanBenchmark() {
 }
 
 // ---------------------------------------------------------------------------
+// MODE HAMBATAN
+// ---------------------------------------------------------------------------
+function setModeHambatan(aktif) {
+  modeHambatan = aktif;
+
+  $("modeHambatan").classList.toggle("aktif", aktif);
+  $("modeHambatan").setAttribute("aria-pressed", String(aktif));
+  $("peta").classList.toggle("mode-hambatan", aktif);
+
+  if (!animasi) {
+    $("statusText").textContent = aktif
+      ? "Mode hambatan aktif: klik jalan atau persimpangan untuk menutup/membuka."
+      : "Mode hambatan nonaktif. Tekan ▶ untuk memutar simulasi.";
+  }
+}
+
+function tanganiKlikPeta(event) {
+  if (!modeHambatan || !peta) return;
+
+  const target = event.target.closest("[data-jenis]");
+  if (!target) return;
+
+  const jenis = target.dataset.jenis;
+  let ditutup = false;
+  let label = "";
+
+  if (jenis === "sisi") {
+    const kunci = target.dataset.kunci;
+    if (!kunci) return;
+    ditutup = !hambatanSisi.has(kunci);
+    if (ditutup) hambatanSisi.add(kunci);
+    else hambatanSisi.delete(kunci);
+    label = "Jalan";
+  } else if (jenis === "node") {
+    const node = Number(target.dataset.node);
+    if (!Number.isInteger(node)) return;
+    ditutup = !hambatanNode.has(node);
+    if (ditutup) hambatanNode.add(node);
+    else hambatanNode.delete(node);
+    label = "Persimpangan";
+  } else {
+    return;
+  }
+
+  hitungDanTampilkan();
+
+  const totalHambatan = hambatanSisi.size + hambatanNode.size;
+  const takTerjangkau = hasilOptimasi.hasil.filter(
+    (h) => h.resto < 0,
+  ).length;
+
+  let teks = `${label} ${ditutup ? "ditutup" : "dibuka"}.`;
+  if (totalHambatan > 0) teks += ` Hambatan aktif: ${totalHambatan}.`;
+  if (takTerjangkau > 0) {
+    teks += ` ${takTerjangkau} konsumen tidak punya rute.`;
+  }
+  if (animasi) teks += " Rute dihitung ulang saat animasi berjalan.";
+
+  $("statusText").textContent = teks;
+}
+
+function resetHambatan() {
+  if (hambatanSisi.size === 0 && hambatanNode.size === 0) {
+    $("statusText").textContent = "Tidak ada hambatan yang aktif.";
+    return;
+  }
+
+  hambatanSisi.clear();
+  hambatanNode.clear();
+  hitungDanTampilkan();
+
+  $("statusText").textContent = animasi
+    ? "Semua hambatan dibuka. Rute dihitung ulang saat animasi berjalan."
+    : "Semua hambatan dibuka. Rute sudah dihitung ulang.";
+}
+
+// ---------------------------------------------------------------------------
 // EVENT LISTENER & TAMPILAN AWAL
 // ---------------------------------------------------------------------------
 $("save").addEventListener("click", () => terapkanData(false));
 $("reset").addEventListener("click", () => resetData());
+
+$("modeHambatan").addEventListener("click", () => {
+  setModeHambatan(!modeHambatan);
+});
+$("resetHambatan").addEventListener("click", resetHambatan);
+$("peta").addEventListener("click", tanganiKlikPeta);
 
 $("playAwal").addEventListener("click", () => putarSimulasi("awal"));
 $("playOpt").addEventListener("click", () => putarSimulasi("optimasi"));

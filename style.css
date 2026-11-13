@@ -440,13 +440,14 @@ p {
   transform: rotate(-45deg);
 }
 
-.ikon-konsumen {
-  width: 13px;
-  height: 13px;
-  margin: 0 2px;
-  border: 3px solid var(--teal);
-  border-radius: 50%;
-  background: var(--paper-2);
+.ikon-legenda.ikon-konsumen {
+  width: 12px;
+  height: 12px;
+  margin: 0 3px 3px;
+  border: 2px solid var(--ink);
+  border-radius: 50% 50% 50% 0;
+  background: #e23b2e;
+  transform: rotate(-45deg);
 }
 
 .ikon-rute {
@@ -457,6 +458,46 @@ p {
   box-shadow:
     0 0 0 2px #fffdf6,
     0 0 0 3px rgba(36, 56, 47, 0.15);
+}
+
+.ikon-hambatan {
+  position: relative;
+  width: 13px;
+  height: 13px;
+  border: 2px solid var(--ink);
+  border-radius: 50%;
+  background: #d93025;
+}
+
+.ikon-hambatan::before,
+.ikon-hambatan::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 8px;
+  height: 2px;
+  border-radius: 2px;
+  background: #fffaf0;
+}
+
+.ikon-hambatan::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.ikon-hambatan::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.ikon-ringkas.ikon-hambatan {
+  width: 20px;
+  height: 20px;
+}
+
+.ikon-ringkas.ikon-hambatan::before,
+.ikon-ringkas.ikon-hambatan::after {
+  width: 11px;
+  height: 2.5px;
 }
 
 .daftar-hasil {
@@ -614,6 +655,86 @@ p {
   background: #f66b4e;
 }
 
+.aksi-peta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.tombol-hambatan,
+.tombol-reset-hambatan {
+  height: 34px;
+  padding: 0 12px;
+  font-size: 11.5px;
+  white-space: nowrap;
+}
+
+.tombol-hambatan {
+  background: var(--mustard);
+  color: var(--ink);
+}
+
+.tombol-hambatan:hover {
+  background: #f7bd4c;
+}
+
+.tombol-hambatan.aktif {
+  background: #d93025;
+  color: #fffaf0;
+  box-shadow:
+    0 0 0 3px rgba(217, 48, 37, 0.18),
+    var(--shadow-tombol);
+}
+
+.tombol-reset-hambatan {
+  background: var(--paper-2);
+  color: var(--ink);
+  font-size: 11px;
+}
+
+.tombol-reset-hambatan:hover {
+  background: #fbf1dd;
+}
+
+/* Area klik jalan/persimpangan di atas peta */
+#lapisan-rute,
+#lapisan-penanda {
+  pointer-events: none;
+}
+
+#peta.mode-hambatan {
+  cursor: crosshair;
+}
+
+.jalan-hit {
+  fill: none;
+  stroke: rgba(0, 0, 0, 0);
+  pointer-events: stroke;
+}
+
+.simpul-hit {
+  fill: rgba(0, 0, 0, 0);
+  pointer-events: all;
+}
+
+#peta.mode-hambatan .jalan-hit:hover {
+  stroke: rgba(217, 48, 37, 0.42);
+}
+
+#peta.mode-hambatan .simpul-hit:hover {
+  fill: rgba(217, 48, 37, 0.28);
+}
+
+#peta.mode-hambatan .jalan-hit[data-tutup="1"]:hover {
+  stroke: rgba(47, 125, 109, 0.45);
+}
+
+#peta.mode-hambatan .simpul-hit[data-tutup="1"]:hover {
+  fill: rgba(47, 125, 109, 0.32);
+}
+
 .bingkai-peta {
   display: flex;
   flex: 1 1 auto;
@@ -706,10 +827,11 @@ p {
   transform: rotate(-45deg) scale(0.8);
 }
 
-.ikon-konsumen {
-  border: 4px solid var(--teal);
-  border-radius: 50%;
-  background: var(--paper-2);
+.ikon-ringkas.ikon-konsumen {
+  border: 2px solid var(--ink);
+  border-radius: 50% 50% 50% 0;
+  background: #e23b2e;
+  transform: rotate(-45deg) scale(0.8);
 }
 
 .chip-ringkasan > span:not(.ikon-ringkas) {
