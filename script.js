@@ -322,6 +322,7 @@ function dijkstraPerKonsumen(
   const V = peta.V;
   const sisiTutup = hambatanSisi || SISI_KOSONG;
   const nodeTutup = hambatanNode || NODE_KOSONG;
+  const adaHambatan = sisiTutup.size > 0 || nodeTutup.size > 0;
   const dist = new Float64Array(V);
   const parent = new Int32Array(V);
   const dilihat = new Int32Array(V); // penanda "sudah diisi pada putaran ini"
@@ -349,7 +350,7 @@ function dijkstraPerKonsumen(
       if (jarak > dist[u]) continue;
 
       // persimpangan yang ditutup tidak boleh diproses/dilewati
-      if (nodeTutup.has(u)) continue;
+      if (adaHambatan && nodeTutup.has(u)) continue;
       nodeDiproses++;
 
       // EARLY EXIT: resto pertama yang keluar dari heap = resto terdekat
@@ -360,9 +361,10 @@ function dijkstraPerKonsumen(
 
       for (const [v, bobot] of peta.adj[u]) {
         // lewati persimpangan atau jalan yang sedang ditutup
-        if (nodeTutup.has(v) || sisiTutup.has(kunciSisi(u, v))) continue;
-
+        if (adaHambatan && (nodeTutup.has(v) || sisiTutup.has(kunciSisi(u, v))))
+          continue;
         cekTetangga++;
+
         const jarakBaru = jarak + bobot;
         const belumPernahDiisi = dilihat[v] !== putaran;
 
@@ -413,6 +415,7 @@ function dijkstraMultiSource(
   const V = peta.V;
   const sisiTutup = hambatanSisi || SISI_KOSONG;
   const nodeTutup = hambatanNode || NODE_KOSONG;
+  const adaHambatan = sisiTutup.size > 0 || nodeTutup.size > 0;
   const dist = new Float64Array(V).fill(Infinity);
   const parent = new Int32Array(V).fill(-1);
   const asal = new Int32Array(V).fill(-1); // resto terdekat dari tiap node
@@ -435,14 +438,15 @@ function dijkstraMultiSource(
     if (jarak > dist[u]) continue;
 
     // persimpangan yang ditutup tidak boleh diproses/dilewati
-    if (nodeTutup.has(u)) continue;
+    if (adaHambatan && nodeTutup.has(u)) continue;
     nodeDiproses++;
 
     for (const [v, bobot] of peta.adj[u]) {
       // lewati persimpangan atau jalan yang sedang ditutup
-      if (nodeTutup.has(v) || sisiTutup.has(kunciSisi(u, v))) continue;
-
+      if (adaHambatan && (nodeTutup.has(v) || sisiTutup.has(kunciSisi(u, v))))
+        continue;
       cekTetangga++;
+
       const jarakBaru = jarak + bobot;
 
       if (jarakBaru < dist[v]) {
