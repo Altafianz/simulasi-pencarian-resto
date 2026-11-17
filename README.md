@@ -34,6 +34,13 @@ Dijkstra tidak mengubah graf asli; kedua algoritma hanya melewati edge/node yang
 
 Hambatan disimpan saat menekan Save (selama ukuran peta tidak berubah). Jika ukuran peta diganti atau Reset ditekan, hambatan dibersihkan.
 
+## Struktur File
+
+- `algoritma.js` — Min-Heap, Dijkstra per konsumen, Dijkstra multi-source, dan pengecekan hasil.
+- `script.js` — pembuat peta serta utilitas graf dan pemilihan resto/konsumen.
+- `peta.js` — render SVG peta, jalan, blok kota, rute, pin, dan hambatan.
+- `app.js` — UI, animasi, interaksi hambatan, dan benchmark.
+
 ## Teknologi
 
 - HTML
