@@ -160,9 +160,9 @@
             <p class="eyebrow">Dijkstra · Pencarian Fasilitas Terdekat</p>
             <h1>Simulasi Resto Terdekat</h1>
             <p class="subjudul">
-              Bandingkan Dijkstra per konsumen dengan multi-source Dijkstra
-              pada peta kota yang sama. Tutup jalan atau persimpangan untuk
-              melihat rute berubah secara langsung.
+              Bandingkan Dijkstra per konsumen dengan multi-source Dijkstra pada
+              peta kota yang sama. Tutup jalan atau persimpangan untuk melihat
+              rute berubah secara langsung.
             </p>
           </div>
           <span class="pill-info">Multi-source</span>
@@ -209,7 +209,9 @@
 
           <div class="status-peta">
             <span class="status-dot" aria-hidden="true"></span>
-            <span id="statusText">Peta siap. Tekan ▶ untuk memutar simulasi.</span>
+            <span id="statusText"
+              >Peta siap. Tekan ▶ untuk memutar simulasi.</span
+            >
           </div>
           <div class="progress" id="progressWrap" hidden>
             <div id="progressBar"></div>
@@ -254,7 +256,9 @@
           <div class="benchmark-isi">
             <div class="benchmark-baris">
               <span>Waktu proses</span>
-              <b><span id="waktuAwal">–</span> <span class="satuan">ms</span></b>
+              <b
+                ><span id="waktuAwal">–</span> <span class="satuan">ms</span></b
+              >
             </div>
             <div class="benchmark-baris baris-formula">
               <span>Kompleksitas waktu</span>
@@ -295,7 +299,7 @@
             </div>
             <div class="benchmark-baris baris-formula">
               <span>Kompleksitas waktu</span>
-              <b>O((V + E) log V)</b>
+              <b>O((V + E) log V + K)</b>
             </div>
             <div class="benchmark-baris baris-formula">
               <span>Kompleksitas ruang</span>
@@ -322,9 +326,7 @@
           hambatan, V dan E aktif mengecil sehingga rumus tetap berlaku.
         </p>
 
-        <p id="banding">
-          Jalankan kedua simulasi untuk melihat perbandingan.
-        </p>
+        <p id="banding">Jalankan kedua simulasi untuk melihat perbandingan.</p>
 
         <div class="benchmark-bawah">
           <details class="benchmark-besar">
